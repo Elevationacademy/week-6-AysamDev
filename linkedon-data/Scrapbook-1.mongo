@@ -1,0 +1,80 @@
+db.linkedon.find({}) //or whichever operation
+
+
+db.linkedon.count(
+{
+    $and: [{salary: {$gte: 7000}},{"currentCompany.name": "Walmart"}]
+})
+
+db.linkedon.find(
+{
+    
+},
+{
+    firstName: 1,
+    salary:1,
+    _id: 0
+}).sort({salary: -1}).limit(3)
+
+db.linkedon.count(
+{
+    
+    salary: {$gt: 25000}
+})
+
+
+db.linkedon.find(
+{
+    $or: [{"currentCompany.industry": "Retail"},{"currentCompany.industry": "Sales"}]
+},
+{
+    "currentCompany.name": 1,
+    firstName: 1,
+    salary:1,
+    lastName: 1,
+    _id: 0
+}).sort({salary: -1}).limit(1)
+
+//find apple people
+db.linkedon.count(
+{
+    $or: [{"currentCompany.name": "Apple"},{"previousCompanies.name": "Apple"}]
+}
+)
+
+//Extension 1
+
+db.linkedon.aggregate([
+                        {$match: {"currentCompany.name": "Apple"}},
+                     { $group: 
+                        { _id: "$currentCompany.industry", 
+                        count: { $sum: 1 } } }
+                   ])
+//Extension 2
+db.linkedon.aggregate([
+                    {$match: {currentPosition:"Analyst"}},
+                     { $group: 
+                        { _id: "$currentCompany.name", 
+                        averageSalary: {$avg: "$salary"}
+                         } }
+                   ])
+
+//Extension 3
+db.linkedon.aggregate([
+         { 
+            $match:
+            {
+                $and: [{"currentCompany.industry": "Tech"}],
+                $or: [ { "currentCompany.name": "Google"},{"currentCompany.name": "Apple" }] ,
+           
+            } 
+          },
+                     { 
+                        $group: 
+                        { 
+                            _id: "$lastName", 
+                            averageSalary: {$avg: "$salary"}
+                        }
+                     },
+                     { $sort: { averageSalary: -1 } }
+                   ])
